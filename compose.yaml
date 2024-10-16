@@ -1,0 +1,27 @@
+# From tutorial: https://github.com/timescale/private-rag-example
+
+services:
+  ollama:
+    image: ollama/ollama
+    ports:
+      - 11435:11434  # Non-standard port !
+    networks:
+        - default
+
+  timescaledb:
+    image: "timescale/timescaledb-ha:pg16"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5433:5432  # Non-standard port !
+    networks:
+        - default
+
+  shell:  # TODO: Create a docker image running Python REPL with airag ready to use
+    image: debian
+    command: bash
+    networks:
+        - default
+
+networks:
+  default:
