@@ -32,7 +32,6 @@ def setup():
     # FIXME: To be implemented correctly: First, models MUST be pulled using `ollama pull <model>`
     print(f'Pulling models for ollama (takes a while): {model_for_query}, {model_for_embedding}...')
     ollama_client = ollama.Client(host='http://localhost:11435')  # FIXME: Dev purpose
-    print(ollama_client.list())
     print(ollama_client.pull(model_for_query))
     print(ollama_client.pull(model_for_embedding))
 
@@ -62,25 +61,44 @@ def insert(title, content):
 def query(query = 'Tell me about gates in South Korea.', context_limit = 3):
     """Return a response generated using RAG contents for the given query.
     """
-    # Generate the response using the ollama_generate function
-    context = retrieve_context(query, limit=context_limit)
-    query_contextualized = f"Query: {query}\nContext: {context}"
-    print(f'Querying with context:\n{query_contextualized}')
-    rows = database.execute("""
-        SELECT ollama_generate(%(model_for_query)s, %(query_contextualized)s, _host=>%(ollama_service)s);
-    """, {
-        'query_contextualized': query_contextualized,
-        'model_for_query': model_for_query,
-        'ollama_service': ollama_service,
-    })
-    model_response = rows[0]
-    return model_response['response']
+    query_contextualized = contextualize_query(query, limit=context_limit)
+    print(f'Querying model "{model_for_query}" with context:\n{'\n'.join(f'> {line}' for line in query_contextualized.splitlines())}')
+    # Generate the answer using ollama
+    answer = ollama.chat(
+        # model="mistral",
+        model=model_for_query,
+        messages = [{
+            "role": "user",
+            'content': query_contextualized
+        }]
+    )
+    return answer['message']['content']
+    # FIXME: The following raises an error in PL/Python function ollama_generate()
+    # # Generate the response using the ollama_generate function
+    # rows = database.execute("""
+    #     SELECT ollama_generate(%(model_for_query)s, %(query_contextualized)s, _host=>%(ollama_service)s);
+    # """, {
+    #     'query_contextualized': query_contextualized,
+    #     'model_for_query': model_for_query,
+    #     'ollama_service': ollama_service,
+    # })
+    # model_response = rows[0]
+    # return model_response['response']
+
+def contextualize_query(query, limit = 0):
+    """Return the given query contextualized with RAG contents.
+    """
+    context = retrieve_context(query, limit=limit)
+    query_contextualized = f"Query: {query}\n\nContext:\n\n{context}"
+    return query_contextualized
 
 def retrieve_context(query, limit = 3):
     """Return a string containing a context from RAG contents.
     """
-    # FIXME: limit must be relative to overall "score" of retrieved rows
-    # Embed the query using the ollama_embed function
+    print('Retrieving context data...')
+    # FIXME: Limit could be relative to overall "score" of retrieved rows
+    #   - Implement auto-limit based on similarity score ?
+    #     Maybe simply take results with similarity >= 7.0 ?
     rows = database.execute("""
         SELECT ollama_embed(%(model_for_embedding)s, %(query)s, _host=>%(ollama_service)s);
     """, {
@@ -98,6 +116,9 @@ def retrieve_context(query, limit = 3):
         ORDER BY similarity DESC
         LIMIT {limit};
     """, (query_embedding,))
+
+    for row in rows:
+        print(f'{row[2]}: {row[0]}')
         
     # Prepare the context for generating the response
     context = "\n\n".join([f"Title: {row[0]}\nContent: {row[1]}" for row in rows])
@@ -138,5 +159,5 @@ def import_dummy_data():
     if len(list()):
         raise AssertionError('Database is not empty')
     for item in data:
-        print(f'Importing: {item}')
+        print(f'Importing dummy data: {item}')
         insert(item['title'], item['content'])
