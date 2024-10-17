@@ -1,21 +1,13 @@
 from . import database
-import ollama
+from ollama import Client as ollama_Client
 
 # Core config
 
 model_for_query = 'llama3.2'
 model_for_embedding = 'nomic-embed-text'
 ollama_service = 'http://ollama:11434'  # NOTE: URL to be called from inside container 'timescaledb' !
-
-
-# FIXME: Changing config for dev environment purpose
-database.config = {
-    'host': 'localhost',
-    'database': 'postgres',
-    'user': 'postgres',
-    'password': 'postgres',
-    'port': '5433'  # Non-standard port !
-}
+print('Creating ollama client...')
+ollama = ollama_Client(host=ollama_service)  # FIXME: Dev purpose
 
 def setup():
     # FIXME: To be implemented correctly: Automatically execute this on docker image build
@@ -31,9 +23,8 @@ def setup():
 
     # FIXME: To be implemented correctly: First, models MUST be pulled using `ollama pull <model>`
     print(f'Pulling models for ollama (takes a while): {model_for_query}, {model_for_embedding}...')
-    ollama_client = ollama.Client(host='http://localhost:11435')  # FIXME: Dev purpose
-    print(ollama_client.pull(model_for_query))
-    print(ollama_client.pull(model_for_embedding))
+    print(ollama.pull(model_for_query))
+    print(ollama.pull(model_for_embedding))
 
 
 # Core component
@@ -63,9 +54,8 @@ def query(query = 'Tell me about gates in South Korea.', context_limit = 3):
     """
     query_contextualized = contextualize_query(query, limit=context_limit)
     print(f'Querying model "{model_for_query}" with context:\n{'\n'.join(f'> {line}' for line in query_contextualized.splitlines())}')
-    # Generate the answer using ollama
+    # Generate the answer using ollama.chat
     answer = ollama.chat(
-        # model="mistral",
         model=model_for_query,
         messages = [{
             "role": "user",
@@ -73,7 +63,7 @@ def query(query = 'Tell me about gates in South Korea.', context_limit = 3):
         }]
     )
     return answer['message']['content']
-    # FIXME: The following raises an error in PL/Python function ollama_generate()
+    # # FIXME: The following raises an error in PL/Python function ollama_generate()
     # # Generate the response using the ollama_generate function
     # rows = database.execute("""
     #     SELECT ollama_generate(%(model_for_query)s, %(query_contextualized)s, _host=>%(ollama_service)s);

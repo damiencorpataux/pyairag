@@ -6,16 +6,15 @@ pyairag
 
 - [ ] Implement filtering retrieved context data based on *similarity score* gap in `core.contextualize_query()`
 
+
 Quickstart
 -
 ```sh
-python3 -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
-
 docker compose up -d
-python test.py
+docker compose run repl
 ```
+See [test.py](test.py) for example instructions.
+
 
 Example
 -
@@ -40,32 +39,43 @@ Here was the answer:
 
 Usage
 -
-For example in REPL:
+For example in REPL (see [Quickstart](#quickstart)):
 ```
 Python 3.12.5 (main, Aug  6 2024, 19:08:49) [Clang 15.0.0 (clang-1500.3.9.4)] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
-
+```
+```
 >>> import airag.core as rag
-
+```
+```
 >>> rag.setup()
 Pulling models for ollama (takes a while): llama3.2, nomic-embed-text...
 {'status': 'success'}
 {'status': 'success'}
-
+```
+```
+>>> rag.setup()
+Pulling models for ollama (takes a while): llama3.2, nomic-embed-text...
+{'status': 'success'}
+{'status': 'success'}
+```
+```
 >>> rag.import_dummy_data()
 Importing dummy data: {'title': 'Seoul Tower', 'content': 'Seoul Tower is a communication and observation tower located on Namsan Mountain in central Seoul, South Korea.'}
 Importing dummy data: {'title': 'Gwanghwamun Gate', 'content': 'Gwanghwamun is the main and largest gate of Gyeongbokgung Palace, in Jongno-gu, Seoul, South Korea.'}
 Importing dummy data: {'title': 'Bukchon Hanok Village', 'content': 'Bukchon Hanok Village is a Korean traditional village in Seoul with a long history.'}
 Importing dummy data: {'title': 'Myeong-dong Shopping Street', 'content': 'Myeong-dong is one of the primary shopping districts in Seoul, South Korea.'}
 Importing dummy data: {'title': 'Dongdaemun Design Plaza', 'content': 'The Dongdaemun Design Plaza is a major urban development landmark in Seoul, South Korea.'}
-
+```
+```
 >>> rag.show()
 Title: Seoul Tower, Content: Seoul Tower is a communication and observation tower located on Namsan Mountain in central Seoul, South Korea., Embedding Dimensions: 768
 Title: Gwanghwamun Gate, Content: Gwanghwamun is the main and largest gate of Gyeongbokgung Palace, in Jongno-gu, Seoul, South Korea., Embedding Dimensions: 768
 Title: Bukchon Hanok Village, Content: Bukchon Hanok Village is a Korean traditional village in Seoul with a long history., Embedding Dimensions: 768
 Title: Myeong-dong Shopping Street, Content: Myeong-dong is one of the primary shopping districts in Seoul, South Korea., Embedding Dimensions: 768
 Title: Dongdaemun Design Plaza, Content: The Dongdaemun Design Plaza is a major urban development landmark in Seoul, South Korea., Embedding Dimensions: 768
-
+```
+```
 >>> query = 'Tell me about gates in South Korea.'
 >>> response = rag.query(query)
 Retrieving context data...
@@ -85,7 +95,8 @@ Querying model "llama3.2" with context:
 > 
 > Title: Seoul Tower
 > Content: Seoul Tower is a communication and observation tower located on Namsan Mountain in central Seoul, South Korea.
-
+```
+```
 >>> print(response)
 In South Korea, gates are an integral part of the country's rich history and architecture. Here are some interesting facts about gates in South Korea:
 

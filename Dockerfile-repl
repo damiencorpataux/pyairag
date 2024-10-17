@@ -1,0 +1,16 @@
+FROM python:3.13
+
+RUN apt-get clean && apt-get -y update
+
+RUN apt-get -y install libpq-dev
+# RUN apt-get -y install libpq-dev iputils-ping curl
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --upgrade pip
+RUN pip install -r /tmp/requirements.txt
+RUN rm /tmp/requirements.txt
+
+COPY airag/ /app/airag
+WORKDIR /app
+
+# TODO: Use ipython3 it uses interpreter Python 3.11
+CMD ["python", "-i", "-c", "import airag.core as rag; print('HINT: Start with `rag.setup()`')"]
