@@ -13,7 +13,7 @@ Quickstart
 docker compose up -d
 docker compose run repl
 ```
-See [test.py](test.py) for example instructions.
+See [usage.py](usage.py) for example usage.
 
 
 Example
@@ -46,12 +46,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 ```
 ```
 >>> import airag.core as rag
-```
-```
->>> rag.setup()
-Pulling models for ollama (takes a while): llama3.2, nomic-embed-text...
-{'status': 'success'}
-{'status': 'success'}
 ```
 ```
 >>> rag.setup()

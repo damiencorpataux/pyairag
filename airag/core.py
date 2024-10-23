@@ -6,6 +6,7 @@ from ollama import Client as ollama_Client
 model_for_query = 'llama3.2'
 model_for_embedding = 'nomic-embed-text'
 ollama_service = 'http://ollama:11434'  # NOTE: URL to be called from inside container 'timescaledb' !
+
 print('Creating ollama client...')
 ollama = ollama_Client(host=ollama_service)  # FIXME: Dev purpose
 
@@ -13,11 +14,17 @@ def setup():
     # FIXME: To be implemented correctly: Automatically execute this on docker image build
     database.execute('CREATE EXTENSION IF NOT EXISTS ai CASCADE;')
     database.execute("""
+        DROP TABLE IF EXISTS documents;
+    """)
+    database.execute("""
         CREATE TABLE IF NOT EXISTS documents (
             id SERIAL PRIMARY KEY,
             title TEXT,
             content TEXT,
-            embedding VECTOR(768)
+            embedding VECTOR(768),
+            mimetype TEXT,
+            source TEXT,
+            created TIMESTAMP DEFAULT now()
         );
     """)
 
@@ -29,21 +36,25 @@ def setup():
 
 # Core component
 
-def insert(title, content):
+def insert(title, content, mimetype=None, source=None):
     """Insert new RAG contents.
     """
     # For now, a RAG data is simply a title and content
-    embed_text = f'{title} - {content}'
+    embed_text = f'{title} - {mimetype+': ' or ""}{content}'
     rows = database.execute("""
-        INSERT INTO documents (title, content, embedding)
+        INSERT INTO documents (title, content, embedding, mimetype, source)
         VALUES (
             %(title)s,
             %(content)s,
-            ollama_embed(%(model_for_embedding)s, %(embed_text)s, _host=>%(ollama_service)s)
+            ollama_embed(%(model_for_embedding)s, %(embed_text)s, _host=>%(ollama_service)s),
+            %(mimetype)s,
+            %(source)s
         )
     """, {
         'title': title,
         'content': content,
+        'mimetype': mimetype,
+        'source': source,
         'model_for_embedding': model_for_embedding,
         'embed_text': embed_text,
         'ollama_service': ollama_service
@@ -118,7 +129,9 @@ def show():
     """Print RAG contents.
     """
     for row in list():
-        print(f"Title: {row[0]}, Content: {row[1]}, Embedding Dimensions: {row[2]}")
+        print(f"Title: {row[0]}, "
+              f"Content: {row[1][:30].replace('\n', ' ')}{f'(...{len(row[1])} chars)' if len(row[1])>30 else ''}, "
+              f"Embedding Dimensions: {row[2]}")
 
 def list():
     """Return a list of RAG contents.
@@ -140,11 +153,11 @@ def clear():
 # FIXME: For sandbox
 def import_dummy_data():
     data = [
-        {"title": "Seoul Tower", "content": "Seoul Tower is a communication and observation tower located on Namsan Mountain in central Seoul, South Korea."},
-        {"title": "Gwanghwamun Gate", "content": "Gwanghwamun is the main and largest gate of Gyeongbokgung Palace, in Jongno-gu, Seoul, South Korea."},
-        {"title": "Bukchon Hanok Village", "content": "Bukchon Hanok Village is a Korean traditional village in Seoul with a long history."},
-        {"title": "Myeong-dong Shopping Street", "content": "Myeong-dong is one of the primary shopping districts in Seoul, South Korea."},
-        {"title": "Dongdaemun Design Plaza", "content": "The Dongdaemun Design Plaza is a major urban development landmark in Seoul, South Korea."}
+        {"source": "dummy", "title": "Seoul Tower", "content": "Seoul Tower is a communication and observation tower located on Namsan Mountain in central Seoul, South Korea."},
+        {"source": "dummy", "title": "Gwanghwamun Gate", "content": "Gwanghwamun is the main and largest gate of Gyeongbokgung Palace, in Jongno-gu, Seoul, South Korea."},
+        {"source": "dummy", "title": "Bukchon Hanok Village", "content": "Bukchon Hanok Village is a Korean traditional village in Seoul with a long history."},
+        {"source": "dummy", "title": "Myeong-dong Shopping Street", "content": "Myeong-dong is one of the primary shopping districts in Seoul, South Korea."},
+        {"source": "dummy", "title": "Dongdaemun Design Plaza", "content": "The Dongdaemun Design Plaza is a major urban development landmark in Seoul, South Korea."}
     ]
     if len(list()):
         raise AssertionError('Database is not empty')

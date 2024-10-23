@@ -1,2 +1,6 @@
 ollama
 psycopg2
+
+bs4
+playwright
+requests
