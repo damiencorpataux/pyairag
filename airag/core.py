@@ -37,7 +37,7 @@ def setup():
 # Core component
 
 def insert(title, content, mimetype=None, source=None):
-    """Insert new RAG contents.
+    """Insert new RAG content.
     """
     # For now, a RAG data is simply a title and content
     embed_text = f'{title} - {mimetype+': ' or ""}{content}'
@@ -61,7 +61,7 @@ def insert(title, content, mimetype=None, source=None):
     })
 
 def query(query = 'Tell me about gates in South Korea.', context_limit = 3):
-    """Return a response generated using RAG contents for the given query.
+    """Return a response generated using RAG content for the given query.
     """
     query_contextualized = contextualize_query(query, limit=context_limit)
     print(f'Querying model "{model_for_query}" with context:\n{'\n'.join(f'> {line}' for line in query_contextualized.splitlines())}')
@@ -87,14 +87,14 @@ def query(query = 'Tell me about gates in South Korea.', context_limit = 3):
     # return model_response['response']
 
 def contextualize_query(query, limit = 0):
-    """Return the given query contextualized with RAG contents.
+    """Return the given query contextualized with RAG content.
     """
     context = retrieve_context(query, limit=limit)
     query_contextualized = f"Query: {query}\n\nContext:\n\n{context}"
     return query_contextualized
 
 def retrieve_context(query, limit = 3):
-    """Return a string containing a context from RAG contents.
+    """Return a string containing a context from RAG content.
     """
     print('Retrieving context data...')
     # FIXME: Limit could be relative to overall "score" of retrieved rows
@@ -126,7 +126,7 @@ def retrieve_context(query, limit = 3):
     return context
 
 def show():
-    """Print RAG contents.
+    """Print RAG content.
     """
     for row in list():
         print(f"Title: {row[0]}, "
@@ -134,7 +134,7 @@ def show():
               f"Embedding Dimensions: {row[2]}")
 
 def list():
-    """Return a list of RAG contents.
+    """Return a list of RAG content.
     """
     rows = database.execute("""
         SELECT title, content, vector_dims(embedding) 
@@ -143,7 +143,7 @@ def list():
     return rows
 
 def clear():
-    """Clear stored RAG contents.
+    """Clear stored RAG content.
     """
     rows = database.execute("""
         DELETE FROM documents;

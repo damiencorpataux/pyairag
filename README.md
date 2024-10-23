@@ -13,7 +13,7 @@ Quickstart
 docker compose up -d
 docker compose run repl
 ```
-See [usage.py](usage.py) for example usage.
+See [usage.py](usage.py) for example usage using Python.
 
 
 Example
