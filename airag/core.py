@@ -40,7 +40,7 @@ def insert(title, content, mimetype=None, source=None):
     """Insert new RAG content.
     """
     # For now, a RAG data is simply a title and content
-    embed_text = f'{title} - {mimetype+': ' or ""}{content}'
+    embed_text = f'{title} - {content}'
     rows = database.execute("""
         INSERT INTO documents (title, content, embedding, mimetype, source)
         VALUES (
