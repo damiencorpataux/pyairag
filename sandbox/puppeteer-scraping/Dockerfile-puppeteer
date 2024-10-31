@@ -1,0 +1,15 @@
+# Reference https://developers.google.com/web/tools/puppeteer/troubleshooting#setting_up_chrome_linux_sandbox
+FROM node:current-alpine
+
+WORKDIR /app
+
+# Manually install Chrome (Chromium)
+RUN apk add chromium
+
+# Skip puppeteer installing chrome and points to correct binary
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+RUN npm install puppeteer
+RUN npm install google-news-scraper
+
+# ENTRYPOINT ["/usr/bin/chromium", "--no-sandbox", "--disable-setuid-sandbox"]

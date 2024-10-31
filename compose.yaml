@@ -24,6 +24,11 @@ services:
     networks:
       - default
 
+  # puppeteer:  # FIXME: dev purpose
+  #   build:
+  #     dockerfile: sandbox/puppeteer-scraping/Dockerfile-puppeteer
+  #     context: .
+
 volumes:
   ollama:
   timescaledb:
