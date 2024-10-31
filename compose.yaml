@@ -15,7 +15,7 @@ services:
     networks:
       - default
 
-  repl:  # TODO: Create a docker image running Python REPL with airag ready to use
+  repl:
     build:
       dockerfile: Dockerfile-repl
       context: .

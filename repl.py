@@ -15,4 +15,8 @@ print(doc)
 rag.insert(**doc)
 rag.show()
 
+* Context retrieval:
+
+rag.retrieve_context('Tell me about...')
+
 """)

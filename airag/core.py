@@ -3,7 +3,7 @@ from ollama import Client as ollama_Client
 
 # Core config
 
-model_for_query = 'llama3.2'
+model_for_query = 'mistral'  # FIXME: 'llama3.2' raises error: ollama._types.ResponseError: error loading model /root/.ollama/models/blobs/...
 model_for_embedding = 'nomic-embed-text'
 ollama_service = 'http://ollama:11434'  # NOTE: URL to be called from inside container 'timescaledb' !
 
@@ -30,8 +30,10 @@ def setup():
 
     # FIXME: To be implemented correctly: First, models MUST be pulled using `ollama pull <model>`
     print(f'Pulling models for ollama (takes a while): {model_for_query}, {model_for_embedding}...')
-    print(ollama.pull(model_for_query))
-    print(ollama.pull(model_for_embedding))
+    for partial in ollama.pull(model_for_query, stream=True):
+        print(partial)
+    for partial in ollama.pull(model_for_embedding, stream=True):
+        print(partial)
 
 
 # Core component
@@ -101,7 +103,10 @@ def retrieve_context(query, limit = 3):
     #   - Implement auto-limit based on similarity score ?
     #     Maybe simply take results with similarity >= 7.0 ?
     rows = database.execute("""
-        SELECT ollama_embed(%(model_for_embedding)s, %(query)s, _host=>%(ollama_service)s);
+        SELECT
+            ollama_embed(
+                %(model_for_embedding)s, %(query)s,
+                _host=>%(ollama_service)s);
     """, {
         'query': query,
         'model_for_embedding': model_for_embedding,
@@ -112,11 +117,20 @@ def retrieve_context(query, limit = 3):
     # Retrieve relevant documents based on cosine distance
     limit = limit if limit>0 else 'NULL'
     rows = database.execute(f"""
-        SELECT title, content, 1 - (embedding <=> %s) AS similarity
-        FROM documents
-        ORDER BY similarity DESC
-        LIMIT {limit};
-    """, (query_embedding,))
+        SELECT * FROM (
+            SELECT
+                title,
+                content,
+                1 - (embedding <=> %(query_embedding)s) AS similarity
+            FROM documents
+            LIMIT {limit}
+        )
+        WHERE similarity > %(similarity_min)s
+        ORDER BY similarity DESC;
+    """, {
+        'query_embedding': query_embedding,
+        'similarity_min': 0.58  # FIXME: Hardcoded
+    })
 
     for row in rows:
         print(f'{row[2]}: {row[0]}')
